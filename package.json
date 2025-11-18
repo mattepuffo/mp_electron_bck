@@ -10,9 +10,11 @@
   "author": "Mattepuffo",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^39.2.1"
+    "electron": "^39.2.1",
+    "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
+    "better-sqlite3": "^12.4.1",
     "bootstrap": "^5.3.8"
   }
 }
