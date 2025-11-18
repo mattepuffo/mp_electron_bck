@@ -1,0 +1,18 @@
+{
+  "name": "mp_electron_bck",
+  "version": "0.0.1",
+  "description": "Programma scritto in Electron per creare archivi backup",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mattepuffo",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^39.2.1"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8"
+  }
+}
