@@ -8,7 +8,7 @@ const createWindow = () => {
   });
 
   win.removeMenu();
-  win.loadFile('./index.html');
+  win.loadFile('./views/index.html');
 }
 
 app.whenReady().then(() => {
