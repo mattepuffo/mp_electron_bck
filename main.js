@@ -1,34 +1,33 @@
-const {app, BrowserWindow} = require('electron');
+const {app, BrowserWindow, ipcMain} = require('electron');
 const path = require('path');
 const fs = require('fs');
-const Database = require('better-sqlite3');
+const initSqlJs = require('sql.js').default;
 
-let mainWindow;
+let db;
+let SQL;
+let exeFolder;
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 800, height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
-
-  // carica la tua app (file o url)
-  mainWindow.loadFile('index.html');
+if (app.isPackaged) {
+  exeFolder = path.dirname(process.execPath);
+} else {
+  exeFolder = path.resolve(__dirname);
 }
 
-function initDatabase() {
-  const dbPath = path.join(app.getPath('userData'), 'app.sqlite');
-  const dbExisted = fs.existsSync(dbPath);
+const dbPath = path.join(exeFolder, 'app.sqlite');
 
-  const db = new Database(dbPath);
+async function initDatabase() {
+  const wasmPath = path.join(__dirname, "db", "sql-wasm.wasm");
+  SQL = await initSqlJs({locateFile: () => wasmPath});
 
-  if (!dbExisted) {
-    console.log('DB non trovato — creo il DB e le tabelle iniziali:', dbPath);
+  if (fs.existsSync(dbPath)) {
+    const fileBuffer = fs.readFileSync(dbPath);
+    db = new SQL.Database(fileBuffer);
+    console.log("DB caricato:", dbPath);
+  } else {
+    db = new SQL.Database();
+    console.log("DB creato:", dbPath);
 
-    const createSql = `
+    db.run(`
         CREATE TABLE IF NOT EXISTS operation_log
         (
             id        INTEGER PRIMARY KEY,
@@ -56,45 +55,49 @@ function initDatabase() {
         );
 
         CREATE UNIQUE INDEX IF NOT EXISTS ftp_uq ON ftp (name);
-    `;
+    `);
 
-    try {
-      db.exec('BEGIN;');
-      db.exec(createSql);
-      db.exec('COMMIT;');
-      console.log('Tabelle e indici creati con successo.');
-    } catch (err) {
-      db.exec('ROLLBACK;');
-      console.error('Errore durante la creazione delle tabelle:', err);
-      throw err;
-    }
-  } else {
-    console.log('DB trovato — nessuna creazione necessaria:', dbPath);
+    saveDatabase();
   }
-
-  return db;
 }
 
-app.whenReady().then(() => {
-  const db = initDatabase();
+function saveDatabase() {
+  const data = db.export();
+  fs.writeFileSync(dbPath, Buffer.from(data));
+  console.log("DB salvato:", dbPath);
+}
 
-  global.sharedDb = db;
-
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+ipcMain.handle("db:run", (event, sql, params = []) => {
+  const stmt = db.prepare(sql);
+  stmt.run(params);
+  stmt.free();
+  saveDatabase();
+  return true;
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    if (global.sharedDb) {
-      try {
-        global.sharedDb.close();
-      } catch (e) {
-      }
+ipcMain.handle("db:all", (event, sql, params = []) => {
+  const stmt = db.prepare(sql);
+  const rows = [];
+  while (stmt.step()) rows.push(stmt.getAsObject());
+  stmt.free();
+  return rows;
+});
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1024,
+    height: 768,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false
     }
-    app.quit();
-  }
+  });
+
+  win.loadFile("renderer/index.html");
+}
+
+app.whenReady().then(async () => {
+  await initDatabase();
+  createWindow();
 });
