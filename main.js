@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, screen} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js').default;
@@ -84,9 +84,11 @@ ipcMain.handle("db:all", (event, sql, params = []) => {
 });
 
 function createWindow() {
+  const {width, height} = screen.getPrimaryDisplay().workAreaSize;
+
   const win = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: Math.floor(width * 0.8),
+    height: Math.floor(height * 0.8),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -94,6 +96,7 @@ function createWindow() {
     }
   });
 
+  win.setMenu(null);
   win.loadFile("renderer/index.html");
 }
 
