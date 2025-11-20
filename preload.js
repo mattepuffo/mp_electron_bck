@@ -6,7 +6,11 @@ const sharedConstants = {
 
 contextBridge.exposeInMainWorld("db", {
   run: (sql, params) => ipcRenderer.invoke("db:run", sql, params),
-  all: (sql, params) => ipcRenderer.invoke("db:all", sql, params)
+  all: (sql, params) => ipcRenderer.invoke("db:all", sql, params),
+});
+
+contextBridge.exposeInMainWorld("click", {
+  tpl: (tpl) => ipcRenderer.invoke("click:tpl", tpl)
 });
 
 contextBridge.exposeInMainWorld('appConstants', sharedConstants);

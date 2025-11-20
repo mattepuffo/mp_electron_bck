@@ -83,6 +83,10 @@ ipcMain.handle("db:all", (event, sql, params = []) => {
   return rows;
 });
 
+ipcMain.handle("click:tpl", (event, tpl) => {
+  return fs.readFileSync(path.join(__dirname, 'renderer', tpl), 'utf-8');
+});
+
 function createWindow() {
   const {width, height} = screen.getPrimaryDisplay().workAreaSize;
 
@@ -97,6 +101,7 @@ function createWindow() {
   });
 
   win.setMenu(null);
+  win.webContents.openDevTools();
   win.loadFile("renderer/index.html");
 }
 
