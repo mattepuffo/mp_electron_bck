@@ -13,8 +13,4 @@ contextBridge.exposeInMainWorld("click", {
   tpl: (tpl) => ipcRenderer.invoke("click:tpl", tpl)
 });
 
-contextBridge.exposeInMainWorld("ftp", {
-  save: (sql, params) => ipcRenderer.invoke("ftp:save", sql, params),
-});
-
 contextBridge.exposeInMainWorld('appConstants', sharedConstants);

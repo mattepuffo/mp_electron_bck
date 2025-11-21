@@ -22,11 +22,8 @@ async function initDatabase() {
   if (fs.existsSync(dbPath)) {
     const fileBuffer = fs.readFileSync(dbPath);
     db = new SQL.Database(fileBuffer);
-    console.log("DB caricato:", dbPath);
   } else {
     db = new SQL.Database();
-    console.log("DB creato:", dbPath);
-
     db.run(`
         CREATE TABLE IF NOT EXISTS operation_log
         (
@@ -64,7 +61,6 @@ async function initDatabase() {
 function saveDatabase() {
   const data = db.export();
   fs.writeFileSync(dbPath, Buffer.from(data));
-  console.log("DB salvato:", dbPath);
 }
 
 ipcMain.handle("db:run", (event, sql, params = []) => {
@@ -87,12 +83,6 @@ ipcMain.handle("db:all", (event, sql, params = []) => {
 // CARICA IL TPL AL CLICK SUL MENU
 ipcMain.handle("click:tpl", (event, tpl) => {
   return fs.readFileSync(path.join(__dirname, 'renderer', tpl), 'utf-8');
-});
-
-// FUNZIONE PER SALVATAGGIO FTP
-ipcMain.handle("ftp:save", (event, sql, params) => {
-  console.clear();
-  console.table(params);
 });
 
 function createWindow() {
