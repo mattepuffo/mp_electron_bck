@@ -83,8 +83,16 @@ ipcMain.handle("db:all", (event, sql, params = []) => {
   return rows;
 });
 
+
+// CARICA IL TPL AL CLICK SUL MENU
 ipcMain.handle("click:tpl", (event, tpl) => {
   return fs.readFileSync(path.join(__dirname, 'renderer', tpl), 'utf-8');
+});
+
+// FUNZIONE PER SALVATAGGIO FTP
+ipcMain.handle("ftp:save", (event, sql, params) => {
+  console.clear();
+  console.table(params);
 });
 
 function createWindow() {
