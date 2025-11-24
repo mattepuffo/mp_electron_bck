@@ -17,30 +17,63 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
 
     document.getElementById('main_content').innerHTML = await window.click.tpl("ftp.html");
 
-    const populateTable = (data) => {
-      const tbody = document.querySelector('tbody');
-      tbody.innerHTML = '';
+    // const populateTable = (data) => {
+    //   const tbody = document.querySelector('tbody');
+    //   tbody.innerHTML = '';
+    //
+    //   data.forEach(row => {
+    //     const tr = document.createElement('tr');
+    //     tr.innerHTML = `
+    //       <td>${row.name}</td>
+    //       <td>${row.host}</td>
+    //       <td>
+    //         <button type="button" class="btn btn-outline-warning btn_edit" data-name="${row.name}" data-host="${row.host}" data-username="${row.username}" data-password="${row.password}">
+    //           <i class="bi bi-pen"></i>
+    //         </button>
+    //         <button type="button" class="btn btn-outline-success btn_play" data-name="${row.name}">
+    //           <i class="bi bi-play-fill"></i>
+    //         </button>
+    //         <button type="button" class="btn btn-outline-danger btn_delete" data-name="${row.name}">
+    //           <i class="bi bi-trash"></i>
+    //         </button>
+    //       </td>
+    //     `;
+    //     tbody.appendChild(tr);
+    //   });
+    // };
 
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.name}</td>
-          <td>${row.host}</td>
-          <td>
-            <button type="button" class="btn btn-outline-warning btn_edit" data-name="${row.name}" data-host="${row.host}" data-username="${row.username}" data-password="${row.password}">
-              <i class="bi bi-pen"></i>
-            </button>
-            <button type="button" class="btn btn-outline-success btn_play" data-name="${row.name}">
-              <i class="bi bi-play-fill"></i>
-            </button>
-            <button type="button" class="btn btn-outline-danger btn_delete" data-name="${row.name}">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+    const populateTable = async (data) => {
+      const tbody = document.querySelector('tbody');
+
+      const template = `
+        {{#rows}}
+          <tr>
+            <td>{{name}}</td>
+            <td>{{host}}</td>
+            <td>
+              <button type="button" class="btn btn-outline-warning btn_edit" 
+                      data-name="{{name}}" 
+                      data-host="{{host}}" 
+                      data-username="{{username}}" 
+                      data-password="{{password}}">
+                <i class="bi bi-pen"></i>
+              </button>
+              <button type="button" class="btn btn-outline-success btn_play" 
+                      data-name="{{name}}">
+                <i class="bi bi-play-fill"></i>
+              </button>
+              <button type="button" class="btn btn-outline-danger btn_delete" 
+                      data-name="{{name}}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        {{/rows}}
+  `;
+
+      tbody.innerHTML = await window.mustache.render(template, {rows: data});
     };
+
     populateTable(rows);
 
     document.querySelector('tbody').addEventListener('click', async (e) => {

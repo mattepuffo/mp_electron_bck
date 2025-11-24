@@ -2,6 +2,7 @@ const {app, BrowserWindow, ipcMain, screen} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js').default;
+const Mustache = require('mustache');
 
 let db;
 let SQL;
@@ -83,6 +84,10 @@ ipcMain.handle("db:all", (event, sql, params = []) => {
 // CARICA IL TPL AL CLICK SUL MENU
 ipcMain.handle("click:tpl", (event, tpl) => {
   return fs.readFileSync(path.join(__dirname, 'renderer', tpl), 'utf-8');
+});
+
+ipcMain.handle('mustache:render', (event, template, data) => {
+  return Mustache.render(template, data);
 });
 
 function createWindow() {

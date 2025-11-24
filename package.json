@@ -16,6 +16,7 @@
   "dependencies": {
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "mustache": "^4.2.0",
     "sql.js": "^1.13.0"
   }
 }
