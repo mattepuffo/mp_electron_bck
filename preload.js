@@ -17,4 +17,8 @@ contextBridge.exposeInMainWorld('mustache', {
   render: (template, data) => ipcRenderer.invoke('mustache:render', template, data)
 });
 
+contextBridge.exposeInMainWorld('electron', {
+  selectDirectory: (operation) => ipcRenderer.invoke('select-directory', operation)
+});
+
 contextBridge.exposeInMainWorld('appConstants', sharedConstants);

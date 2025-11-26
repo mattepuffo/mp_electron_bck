@@ -26,18 +26,21 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
             <td>{{name}}</td>
             <td>{{host}}</td>
             <td>
-              <button type="button" class="btn btn-outline-warning btn_edit" 
+              <button type="button" 
+                      class="btn btn-outline-warning btn_edit" 
                       data-name="{{name}}" 
                       data-host="{{host}}" 
                       data-username="{{username}}" 
                       data-password="{{password}}">
                 <i class="bi bi-pen"></i>
               </button>
-              <button type="button" class="btn btn-outline-success btn_play" 
+              <button type="button" 
+                      class="btn btn-outline-success btn_play" 
                       data-name="{{name}}">
                 <i class="bi bi-play-fill"></i>
               </button>
-              <button type="button" class="btn btn-outline-danger btn_delete" 
+              <button type="button" 
+                      class="btn btn-outline-danger btn_delete" 
                       data-name="{{name}}">
                 <i class="bi bi-trash"></i>
               </button>
@@ -54,6 +57,7 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
     document.querySelector('tbody').addEventListener('click', async (e) => {
       const buttonEdit = e.target.closest('.btn_edit');
       const buttonDelete = e.target.closest('.btn_delete');
+      const buttonPlay = e.target.closest('.btn_play');
 
       if (buttonEdit) {
         const rowData = {
@@ -75,6 +79,11 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
 
         rows = await window.db.all("SELECT * FROM ftp");
         populateTable(rows);
+      }
+
+      if (buttonPlay) {
+        const query = "INSERT INTO operation_log (id, operation, date) VALUES (NULL, ?, ?)";
+        await window.db.run(query, [buttonPlay.dataset.name, Date.now()]);
       }
     });
 
@@ -168,11 +177,8 @@ document.getElementById("link_sync").addEventListener("click", async () => {
                       data-type="{{type}}">
                 <i class="bi bi-pen"></i>
               </button>
-              <button type="button" class="btn btn-outline-success btn_play" 
-                      data-name="{{name}}">
-                <i class="bi bi-play-fill"></i>
-              </button>
-              <button type="button" class="btn btn-outline-danger btn_delete" 
+              <button type="button" 
+                      class="btn btn-outline-danger btn_delete" 
                       data-name="{{name}}">
                 <i class="bi bi-trash"></i>
               </button>
@@ -258,10 +264,71 @@ document.getElementById("link_sync").addEventListener("click", async () => {
         modalAlert.show();
       }
     });
+
+    document.getElementById('btnSelectDir').addEventListener('click', async () => {
+      const path = await window.electron.selectDirectory('export');
+      if (path) {
+        document.getElementById('directory').value = path;
+      }
+    });
   } catch (error) {
     console.error("Errore:", error);
   }
 });
+
+document.getElementById("link_logs").addEventListener("click", async () => {
+
+  try {
+    document.getElementById('main_content').innerHTML = await window.click.tpl("logs.html");
+
+    let rows = await window.db.all("SELECT * FROM operation_log");
+    const populateTable = async (data) => {
+      const tbody = document.querySelector('tbody');
+
+      const formattedData = data.map(row => ({
+        ...row,
+        date: formatTimestamp(row.date)
+      }));
+
+      const template = `
+        {{#rows}}
+          <tr>
+            <td>{{operation}}</td>
+            <td>{{date}}</td>
+          </tr>
+        {{/rows}}
+      `;
+
+      tbody.innerHTML = await window.mustache.render(template, {rows: formattedData});
+    };
+
+    populateTable(rows);
+
+    document.getElementById("clear_logs").addEventListener("click", async () => {
+      const query = "DELETE FROM operation_log";
+      await window.db.run(query, []);
+
+      rows = await window.db.all("SELECT * FROM operation_log");
+      populateTable(rows);
+    });
+
+  } catch (error) {
+    console.error("Errore:", error);
+  }
+});
+
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
 
 // const populateTable = (data) => {
 //   const tbody = document.querySelector('tbody');

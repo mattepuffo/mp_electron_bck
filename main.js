@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain, screen} = require('electron');
+const {app, BrowserWindow, ipcMain, screen, dialog} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js').default;
@@ -88,6 +88,23 @@ ipcMain.handle("click:tpl", (event, tpl) => {
 
 ipcMain.handle('mustache:render', (event, template, data) => {
   return Mustache.render(template, data);
+});
+
+ipcMain.handle('select-directory', async (event, operation) => {
+  const properties = operation === 'export'
+      ? ['openDirectory', 'createDirectory']
+      : ['openDirectory'];
+
+  const result = await dialog.showOpenDialog({
+    properties: properties,
+    title: operation === 'export' ? 'Seleziona cartella di esportazione' : 'Seleziona cartella'
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  return result.filePaths[0];
 });
 
 function createWindow() {
