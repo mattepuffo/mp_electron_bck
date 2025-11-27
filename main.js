@@ -139,8 +139,12 @@ function createWindow() {
     }
   });
 
+  ipcMain.handle('get-window-size', () => {
+    return screen.getPrimaryDisplay().workAreaSize;
+  });
+
   win.setMenu(null);
-  win.webContents.openDevTools();
+  // win.webContents.openDevTools();
   win.loadFile("renderer/index.html");
 }
 

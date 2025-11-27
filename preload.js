@@ -22,7 +22,8 @@ contextBridge.exposeInMainWorld('electron', {
 });
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  comprimiCartella: (cartellaOrigine, nomeFileZip) => ipcRenderer.invoke('comprimi-cartella', cartellaOrigine, nomeFileZip)
+  comprimiCartella: (cartellaOrigine, nomeFileZip) => ipcRenderer.invoke('comprimi-cartella', cartellaOrigine, nomeFileZip),
+  getWindowSize: () => ipcRenderer.invoke('get-window-size')
 });
 
 contextBridge.exposeInMainWorld('appConstants', sharedConstants);

@@ -7,8 +7,27 @@ function updateAppTitles() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  const {width, height} = await window.electronAPI.getWindowSize();
+
+  const container = document.getElementById('global_container');
+  container.style.height = `${Math.floor(height * 0.7)}px`;
+
   updateAppTitles();
+
+  try {
+    document.getElementById('main_content').innerHTML = await window.click.tpl("home.html");
+  } catch (error) {
+    console.error("Errore:", error);
+  }
+});
+
+document.getElementById("link_dashboard").addEventListener("click", async () => {
+  try {
+    document.getElementById('main_content').innerHTML = await window.click.tpl("home.html");
+  } catch (error) {
+    console.error("Errore:", error);
+  }
 });
 
 document.getElementById("link_ftp").addEventListener("click", async () => {
@@ -35,11 +54,6 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
                 <i class="bi bi-pen"></i>
               </button>
               <button type="button" 
-                      class="btn btn-outline-success btn_play" 
-                      data-name="{{name}}">
-                <i class="bi bi-play-fill"></i>
-              </button>
-              <button type="button" 
                       class="btn btn-outline-danger btn_delete" 
                       data-name="{{name}}">
                 <i class="bi bi-trash"></i>
@@ -57,7 +71,6 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
     document.querySelector('tbody').addEventListener('click', async (e) => {
       const buttonEdit = e.target.closest('.btn_edit');
       const buttonDelete = e.target.closest('.btn_delete');
-      const buttonPlay = e.target.closest('.btn_play');
 
       if (buttonEdit) {
         const rowData = {
@@ -79,19 +92,6 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
 
         rows = await window.db.all("SELECT * FROM ftp");
         populateTable(rows);
-      }
-
-      if (buttonPlay) {
-        const risultato = await window.electronAPI.comprimiCartella('C:\\TEST\\test_csharp', 'backup.zip');
-
-        if (risultato.success) {
-          console.log('ZIP creato:', risultato.percorso);
-        } else {
-          console.error('Errore compressione:', risultato.errore);
-        }
-
-        const query = "INSERT INTO operation_log (id, operation, date) VALUES (NULL, ?, ?)";
-        await window.db.run(query, [buttonPlay.dataset.name, Date.now()]);
       }
     });
 
@@ -186,6 +186,13 @@ document.getElementById("link_sync").addEventListener("click", async () => {
                 <i class="bi bi-pen"></i>
               </button>
               <button type="button" 
+                      class="btn btn-outline-success btn_play" 
+                      data-name="{{name}}"
+                      data-directory="{{directory}}"
+                      data-server="{{server}}">
+                <i class="bi bi-play-fill"></i>
+              </button>
+              <button type="button" 
                       class="btn btn-outline-danger btn_delete" 
                       data-name="{{name}}">
                 <i class="bi bi-trash"></i>
@@ -203,6 +210,7 @@ document.getElementById("link_sync").addEventListener("click", async () => {
     document.querySelector('tbody').addEventListener('click', async (e) => {
       const buttonEdit = e.target.closest('.btn_edit');
       const buttonDelete = e.target.closest('.btn_delete');
+      const buttonPlay = e.target.closest('.btn_play');
 
       if (buttonEdit) {
         const rowData = {
@@ -227,6 +235,24 @@ document.getElementById("link_sync").addEventListener("click", async () => {
 
         rows = await window.db.all("SELECT * FROM sync");
         populateTable(rows);
+      }
+
+      if (buttonPlay) {
+        const now = new Date();
+        const dataOra = now.toISOString().replace(/:/g, '-').replace(/\..+/, '');
+        const nomeFile = `${buttonPlay.dataset.name}_${dataOra}.zip`;
+
+        console.log(nomeFile);
+
+        const risultato = await window.electronAPI.comprimiCartella(buttonPlay.dataset.directory, nomeFile);
+
+        if (risultato.success) {
+          const query = "INSERT INTO operation_log (id, operation, date) VALUES (NULL, ?, ?)";
+          await window.db.run(query, [buttonPlay.dataset.name, Date.now()]);
+          console.log('ZIP creato:', risultato.percorso);
+        } else {
+          console.error('Errore compressione:', risultato.errore);
+        }
       }
     });
 
