@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js').default;
 const Mustache = require('mustache');
+const AdmZip = require('adm-zip');
 
 let db;
 let SQL;
@@ -15,6 +16,7 @@ if (app.isPackaged) {
 }
 
 const dbPath = path.join(exeFolder, 'app.sqlite');
+const bckPath = path.join(exeFolder, 'BCK');
 
 async function initDatabase() {
   const wasmPath = path.join(__dirname, "db", "sql-wasm.wasm");
@@ -80,7 +82,6 @@ ipcMain.handle("db:all", (event, sql, params = []) => {
   return rows;
 });
 
-
 // CARICA IL TPL AL CLICK SUL MENU
 ipcMain.handle("click:tpl", (event, tpl) => {
   return fs.readFileSync(path.join(__dirname, 'renderer', tpl), 'utf-8');
@@ -105,6 +106,24 @@ ipcMain.handle('select-directory', async (event, operation) => {
   }
 
   return result.filePaths[0];
+});
+
+ipcMain.handle('comprimi-cartella', async (event, cartellaOrigine, nomeFileZip) => {
+  try {
+    if (!fs.existsSync(bckPath)) {
+      fs.mkdirSync(bckPath, {recursive: true});
+    }
+
+    const percorsoZip = path.join(bckPath, nomeFileZip);
+    const zip = new AdmZip();
+
+    zip.addLocalFolder(cartellaOrigine);
+    zip.writeZip(percorsoZip);
+
+    return {success: true, percorso: percorsoZip};
+  } catch (error) {
+    return {success: false, errore: error.message};
+  }
 });
 
 function createWindow() {

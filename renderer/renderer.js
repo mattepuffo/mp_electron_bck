@@ -82,6 +82,14 @@ document.getElementById("link_ftp").addEventListener("click", async () => {
       }
 
       if (buttonPlay) {
+        const risultato = await window.electronAPI.comprimiCartella('C:\\TEST\\test_csharp', 'backup.zip');
+
+        if (risultato.success) {
+          console.log('ZIP creato:', risultato.percorso);
+        } else {
+          console.error('Errore compressione:', risultato.errore);
+        }
+
         const query = "INSERT INTO operation_log (id, operation, date) VALUES (NULL, ?, ?)";
         await window.db.run(query, [buttonPlay.dataset.name, Date.now()]);
       }

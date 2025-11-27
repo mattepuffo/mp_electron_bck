@@ -21,4 +21,8 @@ contextBridge.exposeInMainWorld('electron', {
   selectDirectory: (operation) => ipcRenderer.invoke('select-directory', operation)
 });
 
+contextBridge.exposeInMainWorld('electronAPI', {
+  comprimiCartella: (cartellaOrigine, nomeFileZip) => ipcRenderer.invoke('comprimi-cartella', cartellaOrigine, nomeFileZip)
+});
+
 contextBridge.exposeInMainWorld('appConstants', sharedConstants);
