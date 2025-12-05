@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const initSqlJs = require('sql.js').default;
 const Mustache = require('mustache');
-const AdmZip = require('adm-zip');
+const archiver = require('archiver');
 
 let db;
 let SQL;
@@ -115,12 +115,35 @@ ipcMain.handle('comprimi-cartella', async (event, cartellaOrigine, nomeFileZip) 
     }
 
     const percorsoZip = path.join(bckPath, nomeFileZip);
-    const zip = new AdmZip();
 
-    zip.addLocalFolder(cartellaOrigine);
-    zip.writeZip(percorsoZip);
+    const output = fs.createWriteStream(percorsoZip);
+    const archive = archiver('zip', {
+      zlib: {level: 9}
+    });
 
-    return {success: true, percorso: percorsoZip};
+    return new Promise((resolve, reject) => {
+      output.on('close', () => {
+        resolve({
+          success: true,
+          percorso: percorsoZip
+        });
+      });
+
+      archive.on('error', (err) => {
+        reject({success: false, errore: err.message});
+      });
+
+      output.on('error', (err) => {
+        reject({success: false, errore: err.message});
+      });
+
+      archive.pipe(output);
+
+      archive.directory(cartellaOrigine, false);
+
+      archive.finalize();
+    });
+
   } catch (error) {
     return {success: false, errore: error.message};
   }
@@ -144,7 +167,7 @@ function createWindow() {
   });
 
   win.setMenu(null);
-  // win.webContents.openDevTools();
+  win.webContents.openDevTools();
   win.loadFile("renderer/index.html");
 }
 

@@ -238,21 +238,38 @@ document.getElementById("link_sync").addEventListener("click", async () => {
       }
 
       if (buttonPlay) {
-        const now = new Date();
-        const dataOra = now.toISOString().replace(/:/g, '-').replace(/\..+/, '');
-        const nomeFile = `${buttonPlay.dataset.name}_${dataOra}.zip`;
+        const modalElement = document.getElementById('loading_modal');
+        let loadingModal = bootstrap.Modal.getInstance(modalElement);
 
-        console.log(nomeFile);
-
-        const risultato = await window.electronAPI.comprimiCartella(buttonPlay.dataset.directory, nomeFile);
-
-        if (risultato.success) {
-          const query = "INSERT INTO operation_log (id, operation, date) VALUES (NULL, ?, ?)";
-          await window.db.run(query, [buttonPlay.dataset.name, Date.now()]);
-          console.log('ZIP creato:', risultato.percorso);
-        } else {
-          console.error('Errore compressione:', risultato.errore);
+        if (!loadingModal) {
+          loadingModal = new bootstrap.Modal(modalElement);
         }
+
+        loadingModal.show();
+
+        modalElement.addEventListener('shown.bs.modal', async function handler() {
+          modalElement.removeEventListener('shown.bs.modal', handler);
+
+          try {
+            const now = new Date();
+            const dataOra = now.toISOString().replace(/:/g, '-').replace(/\..+/, '');
+            const nomeFile = `${buttonPlay.dataset.name}_${dataOra}.zip`;
+
+            const risultato = await window.electronAPI.comprimiCartella(buttonPlay.dataset.directory, nomeFile);
+
+            if (risultato.success) {
+              const query = "INSERT INTO operation_log (id, operation, date) VALUES (NULL, ?, ?)";
+              await window.db.run(query, [buttonPlay.dataset.name, Date.now()]);
+              console.log('ZIP creato:', risultato.percorso);
+            } else {
+              console.error('Errore compressione:', risultato.errore);
+            }
+          } catch (error) {
+            console.error('Errore:', error);
+          } finally {
+            loadingModal.hide();
+          }
+        });
       }
     });
 
